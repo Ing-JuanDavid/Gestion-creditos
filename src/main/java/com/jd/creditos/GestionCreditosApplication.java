@@ -2,8 +2,13 @@ package com.jd.creditos;
 
 import com.jd.creditos.modelos.Cliente;
 import com.jd.creditos.modelos.Credito;
+import com.jd.creditos.modelos.Pago;
 import com.jd.creditos.servicios.IClienteServ;
+import com.jd.creditos.servicios.ICreditoServ;
+import com.jd.creditos.servicios.IPagoServ;
 import com.jd.creditos.servicios.imp.ClienteServImp;
+import com.jd.creditos.servicios.imp.CreditoServImp;
+import com.jd.creditos.servicios.imp.PagoServImp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +28,12 @@ public class GestionCreditosApplication implements CommandLineRunner {
 	@Autowired
 	private IClienteServ clienteServ = new ClienteServImp();
 
+	@Autowired
+	private ICreditoServ creditoServ = new CreditoServImp();
+
+	@Autowired
+	private IPagoServ pagoServ = new PagoServImp();
+
 	public static void main(String[] args) {
 		logger.info("Iniciando app");
 		SpringApplication.run(GestionCreditosApplication.class, args);
@@ -32,20 +43,21 @@ public class GestionCreditosApplication implements CommandLineRunner {
 	public void run(String... args) throws Exception {
 		logger.info("Prueba");
 		var cliente = clienteServ.buscarCliente(1064606279);
+		logger.info("Mostrando creditos de " + cliente.getIdCliente());
+		clienteServ.listarCreditos(cliente.getIdCliente()).forEach(System.out::println);
+		// Agregando un pago al credito 5
+		var credito = creditoServ.buscarCredito(5);
+//		var pago = new Pago();
+//		pago.setValor(new BigDecimal(50000));
+//		pago.setFecha(LocalDate.now());
+//		pago.setCliente(cliente);
+//		pago.setCredito(credito);
+//		credito.getPagos().add(pago);
+//		creditoServ.agregarCredito(credito);
 
-		var credito = new Credito();
-		credito.setMonto(new BigDecimal(500000));
-		credito.setFechaF(LocalDate.of(2025, 6, 6));
-		credito.setTi(.1f);
-		credito.setCliente(cliente); // Establecer relación bidireccional
-
-		cliente.getCreditos().add(credito); // Agregar crédito a la lista de créditos del cliente
-//
-//		// Guardar el cliente (Hibernate guardará automáticamente los créditos gracias a CascadeType.ALL)
-		clienteServ.agregarCliente(cliente);
-//		logger.info("Cliente agregado");
-		clienteServ.listarCreditos(1064606279).forEach(System.out::println);
-
-		var creditos = clienteServ.listarCreditos(1064606279);
+		var listaPagos = credito.getPagos();
+		if (!listaPagos.isEmpty())
+			listaPagos.forEach(System.out::println);
+		else logger.info("No hay pagos para este credito");
 	}
 }

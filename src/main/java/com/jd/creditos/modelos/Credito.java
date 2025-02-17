@@ -45,7 +45,7 @@ public class Credito {
     private Cliente cliente;
 
     // Relacion de uno a muchos con pago
-    @OneToMany(mappedBy = "credito", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "credito", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude // Para evitar problemas de Lazy Loading
     private List<Pago> pagos;
 }

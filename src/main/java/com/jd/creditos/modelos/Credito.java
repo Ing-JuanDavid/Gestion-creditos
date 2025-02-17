@@ -18,26 +18,28 @@ import java.util.List;
 @Table(name="creditos")
 public class Credito {
     @Id
-    @Column(name="idCredito")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idCredito;
-    @Column(nullable = false)
-    private Double monto;
-    @Column(name="fechaI")
+
+    @Column(nullable = false, precision = 13, scale = 3)
+    private BigDecimal monto;
+
     private LocalDate fechaI;
 
     @Column(name = "plazo", nullable = false)
     private LocalDate fechaF;
 
     @Column(nullable = false)
-    private Double ti;
+    private Float ti;
 
-    @Column(name="valorTotal")
-    private Double valorTotal;
+    @Column(precision = 13, scale = 3)
+    private BigDecimal valorTotal;
 
-    private Double saldo;
+    @Column(precision = 13, scale = 3)
+    private BigDecimal saldo;
 
     // Referencia a cliente
+    @ToString.Exclude
     @ManyToOne
     @JoinColumn(name = "idCliente", nullable = false)
     private Cliente cliente;

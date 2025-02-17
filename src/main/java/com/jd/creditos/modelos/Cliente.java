@@ -16,20 +16,18 @@ import java.util.List;
 @Table(name = "clientes")
 public class Cliente {
     @Id
-    @Column(name="idCliente")
     private Integer idCliente;
     @Column(nullable = false)
     private String nombre;
     private String estado;
 
     // Relacion de uno a muchos con credito
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "cliente",fetch = FetchType.EAGER,cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<Credito> creditos;
 
     // Relacion de uno a muchos con pago
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "cliente", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude // Para evitar problemas de Lazy Loading
     private List<Pago> pagos;
-
 }

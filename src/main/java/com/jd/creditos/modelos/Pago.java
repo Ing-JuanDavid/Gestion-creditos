@@ -2,22 +2,23 @@ package com.jd.creditos.modelos;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(name="pagos")
 public class Pago {
     @Id
-    @Column(name = "idPago")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idPago;
 
-    @Column(nullable = false)
-    private Double valor;
+    @Column(nullable = false, precision = 13, scale = 3)
+    private BigDecimal valor;
 
     private LocalDate fecha;
 
-    private Double saldo;
+    @Column(precision = 13, scale = 3)
+    private BigDecimal saldo;
 
     // Relación con Cliente
     @ManyToOne

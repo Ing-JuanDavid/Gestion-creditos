@@ -1,7 +1,7 @@
 # Proyecto gestión de créditos
 ## Descripción del negocio
 La empresa x realiza créditos a las personas que requieran sus servicios con una taza de interés variable y a distintos plazos. Actualmente la información relacionada a los créditos de cada cliente se almacena en un bloc de notas con el siguiente formato “Nombre del cliente—cantidad prestada—plazo—interés—fecha de realización del crédito”, debajo de cada registro se van añadiendo los pagos realizados por el cliente y el saldo restante, esto hace del sistema rudimentario y susceptible a muchos errores, en el peor de los casos, la perdida de la información total de los clientes. Teniendo en cuenta lo anterior, la empresa x desea implementar un sistema de gestión de créditos que le permita gestionar la información de cada cliente de una forma más eficiente y así evitar posibles errores relacionados a la perdida de información.
-## Levantamiento de requerimientos
+>## Levantamiento de requerimientos
 ### Requerimientos funcionales
 1. El administrador debe poder autenticarse y también definir su contraseña a través del código 2064
 2. Se debe poder crear clientes

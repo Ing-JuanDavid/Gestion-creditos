@@ -5,6 +5,7 @@ import com.jd.creditos.modelos.Credito;
 import com.jd.creditos.modelos.Pago;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IClienteServ {
     public List<Cliente> listarClientes();
@@ -18,4 +19,5 @@ public interface IClienteServ {
     public List<Credito> listarCreditos(Integer idcliente);
 
     public List<Pago> listarPagos(Integer idCliente);
+
 }

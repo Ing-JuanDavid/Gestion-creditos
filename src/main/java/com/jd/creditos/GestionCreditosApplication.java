@@ -2,12 +2,16 @@ package com.jd.creditos;
 
 import com.jd.creditos.modelos.Cliente;
 import com.jd.creditos.modelos.Credito;
+import com.jd.creditos.modelos.Pago;
 import com.jd.creditos.servicios.IClienteServ;
 import com.jd.creditos.servicios.ICreditoServ;
 import com.jd.creditos.servicios.IPagoServ;
 import com.jd.creditos.servicios.imp.ClienteServImp;
 import com.jd.creditos.servicios.imp.CreditoServImp;
 import com.jd.creditos.servicios.imp.PagoServImp;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,16 +86,19 @@ public class GestionCreditosApplication implements CommandLineRunner {
 				if(mostrarClientes())
 					crearCredito(ent);
 				else
-					logger.info("Debe agregar un cliente primero");
+					logger.info("Debe agregar un cliente primero" + nl);
 			}
 			case 3 ->{
 				if(mostrarClientes())
 					registrarPago(ent);
 				else
-					logger.info("Debe agregar un cliente primero");
+					logger.info("Debe agregar un cliente primero" + nl);
 			}
-			case 4 ->{}
-			case 5 ->{return true;}
+			case 4 -> {
+				if(!mostrarClientes())logger.info("No hay clientes para mostrar" + nl);}
+			case 5 ->{
+				logger.info("Saliendo..." +nl);
+				return true;}
 		}
 		return false;
 	}
@@ -144,20 +151,49 @@ public class GestionCreditosApplication implements CommandLineRunner {
 	}
 
 	public void registrarPago(Scanner ent){
-		logger.info(nl + "Registrar pago------>" + nl);
+		logger.info(nl + "Realizar pago------>" + nl);
 		logger.info("Id cliente: ");
-		var id = Integer.parseInt(ent.nextLine());
+		var idCliente = Integer.parseInt(ent.nextLine());
+		Cliente cliente = clienteServ.buscarCliente(idCliente);
+		if(cliente == null){
+			logger.info("No existe un cliente con Id: " + idCliente + nl);
+			return;
+		}
 
-		var cliente = clienteServ.buscarCliente(id);
+		var creditos = cliente.getCreditos();
+		if (creditos.isEmpty()){
+			logger.info("El cliente " + cliente.getNombre() + " aun no tiene creditos" + nl);
+				return;
+		}
+		logger.info(nl + "Creditos de " + cliente.getNombre() + " ----->" +nl);
+		creditos.forEach(credito -> logger.info(credito.toString() + nl));
+		logger.info("Seleccione un credito (Id): ");
+		var idCredito = Integer.parseInt(ent.nextLine());
+		Credito credito = buscarCreditoCliente(idCliente,idCredito);
+		if(credito == null){
+			logger.info("No existe un credito con Id: " + idCredito + nl);
+			return;
+		}
 
-		if(cliente != null){
-			var creditos = cliente.getCreditos();
-			if (!creditos.isEmpty())
-				logger.info(nl + "Creditos de " + cliente.getNombre() + " ----->" +nl);
-				creditos.forEach(credito -> logger.info(credito.toString() + nl));
-		    }
-			else
-				logger.info("No existe un cliente con Id: " + id + nl);
+		logger.info(nl + "Efectuar pago-----v" + nl);
+		logger.info(credito.toString() + " seleccionado" + nl);
+		logger.info("Ingrese el valor a cancelar: ");
+		BigDecimal valor = BigDecimal.valueOf(Double.parseDouble(ent.nextLine()));
+
+		var pago  = new Pago();
+		pago.setCliente(cliente);
+		pago.setCredito(credito);
+		pago.setValor(valor);
+		pagoServ.agregarPago(pago);
+		logger.info("Pago registrado!" + nl);
+
+		credito.getPagos().add(pago);
+		cliente.getPagos().add(pago);
+
+		logger.info("Pagos------------------" + nl);
+		clienteServ.listarPagos(cliente.getIdCliente()).forEach(obj -> logger.info(obj.toString() + nl));
+		//cliente.getPagos().forEach(p -> logger.info(p.toString() + nl)); en l alista de creditos el ultimo elemento esta incompleto
+		// ya que los datos faltantes los rellena el trigger
 	}
 
 	public boolean mostrarClientes(){
@@ -170,5 +206,12 @@ public class GestionCreditosApplication implements CommandLineRunner {
 			return false;
 		}
 		return true;
+	}
+
+	public Credito buscarCreditoCliente(Integer idCliente, Integer idCredito){
+		var credito = creditoServ.buscarCredito(idCredito);
+		if(credito.getCliente().getIdCliente().equals(idCliente))
+			return credito;
+		return null;
 	}
 }

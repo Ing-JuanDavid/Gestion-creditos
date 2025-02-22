@@ -33,4 +33,6 @@ public class PagoServImp implements IPagoServ {
     public void eliminarPago(Integer idPago) {
         pagoRepo.deleteById(idPago);
     }
+
+
 }

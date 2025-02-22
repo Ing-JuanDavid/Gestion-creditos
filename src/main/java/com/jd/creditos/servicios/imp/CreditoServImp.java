@@ -40,4 +40,5 @@ public class CreditoServImp implements ICreditoServ {
                           .map(Credito::getPagos)
                           .orElse(List.of());
     }
+
 }

@@ -15,9 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,7 +58,7 @@ public class GestionCreditosApplication implements CommandLineRunner {
 				var opcion = mostrarMenu(consola);
 				salir = ejecutarOpciones(consola, opcion);
 			}catch (Exception e){
-				logger.info("Ha ocurrirdo un error: " + e.getMessage() + nl);
+				logger.info("Ha ocurrido un error: " + e.getCause());
 			}finally{
 				logger.info(nl);
 			}
@@ -67,10 +70,11 @@ public class GestionCreditosApplication implements CommandLineRunner {
 				\t.:MENU:.
 				1. Agregar cliente
 				2. Crear un credito
-				3. Registrar pago
-				4. Ver clientes
-				5. Buscar creditos por cliente
-				6. Salir
+				3. Editar credito
+				4. Registrar pago
+				5. Ver clientes
+				6. Buscar creditos por cliente
+				7. Salir
 				Ecoje una opcion:\s""");
 		return Integer.parseInt(consola.nextLine());
 	}
@@ -79,10 +83,11 @@ public class GestionCreditosApplication implements CommandLineRunner {
 		switch(opcion){
 			case 1 -> agregarCliente(consola);
 			case 2 -> crearCredito(consola);
-			case 3 -> registrarPago(consola);
-			case 4 -> {if(!mostrarClientes())logger.info("No hay clientes para mostrar" + nl);}
-			case 5 -> buscarCreditosCliente(consola);
-			case 6 -> {logger.info("Saliendo..." +nl);return true;}
+			case 3 -> editarCredito(consola);
+			case 4 -> registrarPago(consola);
+			case 5 -> {if(!mostrarClientes())logger.info("No hay clientes para mostrar" + nl);}
+			case 6 -> buscarCreditosCliente(consola);
+			case 7 -> {logger.info("Saliendo..." +nl);return true;}
 		}
 		return false;
 	}
@@ -105,35 +110,51 @@ public class GestionCreditosApplication implements CommandLineRunner {
 			logger.info("Debe agregar un cliente primero" + nl);
 			return;
 		}
+
 		logger.info(nl + "Creando credito----->" + nl);
 		logger.info("Id del cliente: ");
 		var id = Integer.parseInt(consola.nextLine());
 		var cliente = clienteServ.buscarCliente(id);
 
 		if(cliente != null){// Si el cliente existe se recolectan los datos para el credito y se crea
-			logger.info("Monto: ");
-			Double monto = Double.parseDouble(consola.nextLine());
-			logger.info("Taza de interes: ");
-			float ti = Float.parseFloat(consola.nextLine());
-			logger.info("Fecha final (yy-mm-dd): ");
-			var fecha = consola.nextLine();
-
-			// Como el metodo setFechaF recibe como argumento un objeto de tipo LocalDate y por consola se obtiene un String,
-			// este se debe convertir al tipo requerido
-			DateTimeFormatter formateador = DateTimeFormatter.ofPattern("yy-MM-dd");
-			LocalDate fechaF = LocalDate.parse(fecha,formateador);
-
 			var credito = new Credito();
-			credito.setMonto(new BigDecimal(monto));
-			credito.setTi(ti);
-			credito.setFechaF(fechaF);
+			credito.setFechaI(LocalDate.now());
+			rellenarCredito(credito,consola);
 			credito.setCliente(cliente);
-			cliente.getCreditos().add(credito);
-			clienteServ.agregarCliente(cliente);
+			creditoServ.agregarCredito(credito); // Se agrega el credito a la bd
 			logger.info("Se ha creado el credito" + nl);
+			cliente.getCreditos().add(credito);
+			mostrarCreditos(cliente);
 		}
 		else
 			logger.info("No existe un cliente con Id: " + id + nl);
+	}
+
+	public void editarCredito(Scanner consola) {
+	  if(!mostrarClientes()){
+		  logger.info("Debe agregar un cliente primero" + nl);
+		  return;
+	  }
+	  // crear un metodo para reutilizar estas lineas
+		logger.info("Id del cliente: ");
+		var id = Integer.parseInt(consola.nextLine());
+		var cliente = clienteServ.buscarCliente(id);
+
+		if(cliente != null){
+			logger.info(nl +"Creditos de " + cliente.getNombre() + "-----v" + nl);
+			mostrarCreditos(cliente);
+			logger.info("Seleccione un credito: ");
+			var idCredito = Integer.parseInt(consola.nextLine());
+			var credito = clienteServ.buscarCredito(idCredito,cliente);
+			if(credito != null){
+				logger.info(nl + "Editar credito----->" +nl);
+				logger.info(credito.toString() + nl);
+				rellenarCredito(credito,consola);
+				creditoServ.agregarCredito(credito);
+				logger.info("Cambios guardados!" + nl);
+			}
+			else logger.info("No existe un credito con Id: " + idCredito);
+		}
 
 	}
 
@@ -156,20 +177,20 @@ public class GestionCreditosApplication implements CommandLineRunner {
 			logger.info("El cliente " + cliente.getNombre() + " aun no tiene creditos" + nl);
 				return;
 		}
-		logger.info(nl + "Creditos de " + cliente.getNombre() + " ----->" +nl);
+		logger.info(nl + "Creditos de " + cliente.getNombre() + " -----v" +nl);
 		creditos.forEach(credito -> logger.info(credito.toString() + nl));
 		logger.info("Seleccione un credito (Id): ");
 		var idCredito = Integer.parseInt(consola.nextLine());
-		Credito credito = buscarCreditoCliente(idCliente,idCredito);
+		Credito credito = clienteServ.buscarCredito(idCredito,cliente);
 		if(credito == null){
 			logger.info("No existe un credito con Id: " + idCredito + nl);
 			return;
 		}
 
-		logger.info(nl + "Efectuar pago-----v" + nl);
+		logger.info(nl + "Efectuar pago----->" + nl);
 		logger.info(credito.toString() + " seleccionado" + nl);
 		logger.info("Ingrese el valor a cancelar: ");
-		BigDecimal valor = BigDecimal.valueOf(Double.parseDouble(consola.nextLine()));
+		var valor = BigDecimal.valueOf(Double.parseDouble(consola.nextLine()));
 
 		var pago  = new Pago();
 		pago.setCliente(cliente);
@@ -181,8 +202,13 @@ public class GestionCreditosApplication implements CommandLineRunner {
 		credito.getPagos().add(pago);
 		cliente.getPagos().add(pago);
 
-		logger.info("Pagos------------------" + nl);
-		clienteServ.listarPagos(cliente.getIdCliente()).forEach(obj -> logger.info(obj.toString() + nl));
+		logger.info("Pagos-----v" + nl);
+		clienteServ.listarPagos(cliente.getIdCliente()).forEach(obj -> {
+			if(obj.getCredito().getIdCredito() == idCredito){
+				logger.info(obj.toString() + nl);
+			}
+
+		});
 		//cliente.getPagos().forEach(p -> logger.info(p.toString() + nl)); en l alista de creditos el ultimo elemento esta incompleto
 		// ya que los datos faltantes los rellena el trigger
 	}
@@ -222,10 +248,53 @@ public class GestionCreditosApplication implements CommandLineRunner {
 		return true;
 	}
 
-	public Credito buscarCreditoCliente(Integer idCliente, Integer idCredito){
-		var credito = creditoServ.buscarCredito(idCredito);
-		if(credito.getCliente().getIdCliente().equals(idCliente))
-			return credito;
-		return null;
+	public void mostrarCreditos(Cliente cliente){
+		cliente.getCreditos().forEach(c->logger.info(c.toString()+nl));
 	}
+
+	public void rellenarCredito(Credito credito, Scanner consola) {
+		logger.info("Monto: ");
+		var monto = new BigDecimal(consola.nextLine());
+		logger.info("Tasa de interés: ");
+		var ti = new BigDecimal(consola.nextLine());
+		var fechaI = LocalDate.now();
+		logger.info("Fecha final (yy-mm-dd): ");
+		var fecha = consola.nextLine();
+		var formateador = DateTimeFormatter.ofPattern("yy-MM-dd");
+		var fechaF = LocalDate.parse(fecha,formateador);
+		BigDecimal valorT = monto.add(monto.multiply(ti));
+		BigDecimal saldo;
+
+		if(credito.getIdCredito() != null){
+			if(credito.getPagos().isEmpty()){
+				monto = monto.add(credito.getMonto());
+				valorT = valorT.add(credito.getSaldo());
+				saldo = valorT;
+			}else {
+				valorT = valorT.add(credito.getValorTotal());
+				actualizarPagos(credito.getPagos(),valorT);
+				monto = monto.add(credito.getMonto());
+				saldo = credito.getPagos().getLast().getSaldo();
+			}
+		}
+		else saldo = valorT;
+
+		credito.setMonto(monto);
+		credito.setTi(ti);
+		credito.setFechaI(fechaI);
+		credito.setValorTotal(valorT);
+		credito.setSaldo(saldo);
+		credito.setFechaF(fechaF);
+	}
+
+	public void actualizarPagos(List<Pago> pagos, BigDecimal totalPrestado){
+		var saldoAct = totalPrestado.subtract(pagos.getFirst().getValor());
+		pagos.getFirst().setSaldo(saldoAct);
+		for(Pago p : pagos){
+			if(pagos.indexOf(p) == 0) continue;
+			saldoAct = saldoAct.subtract(p.getValor());
+			p.setSaldo(saldoAct);
+		}
+	}
+
 }

@@ -33,6 +33,14 @@ public class ClienteServImp implements IClienteServ {
     }
 
     @Override
+    public Credito buscarCredito(Integer idCredito,Cliente cliente) {
+        for(Credito c : cliente.getCreditos()){
+            if(c.getIdCredito().equals(idCredito)) return c;
+        }
+        return null;
+    }
+
+    @Override
     public void eliminarCliente(Integer idCliente) {
         clienteRepo.deleteById(idCliente);
     }
@@ -40,9 +48,10 @@ public class ClienteServImp implements IClienteServ {
 
     @Override
     public List<Credito> listarCreditos(Integer idCliente) {
-        return clienteRepo.findById(idCliente)
-                          .map(Cliente::getCreditos)
-                          .orElse(List.of());
+        return clienteRepo
+                .findById(idCliente)
+                .map(Cliente::getCreditos)
+                .orElse(List.of());
     }
 
     @Override

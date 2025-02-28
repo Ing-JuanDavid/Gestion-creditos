@@ -5,7 +5,6 @@ import com.jd.creditos.modelos.Credito;
 import com.jd.creditos.modelos.Pago;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface IClienteServ {
     public List<Cliente> listarClientes();
@@ -14,9 +13,11 @@ public interface IClienteServ {
 
     public Cliente buscarCliente(Integer idCliente);
 
+    public Credito buscarCredito(Integer idCredito, Cliente cliente);
+
     public void eliminarCliente(Integer idCliente);
 
-    public List<Credito> listarCreditos(Integer idcliente);
+    public List<Credito> listarCreditos(Integer idCliente);
 
     public List<Pago> listarPagos(Integer idCliente);
 

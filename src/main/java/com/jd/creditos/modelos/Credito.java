@@ -29,8 +29,8 @@ public class Credito {
     @Column(name = "plazo", nullable = false)
     private LocalDate fechaF;
 
-    @Column(nullable = false)
-    private Float ti;
+    @Column(nullable = false, precision = 2, scale = 2)
+    private BigDecimal ti;
 
     @Column(precision = 13, scale = 3)
     private BigDecimal valorTotal;
